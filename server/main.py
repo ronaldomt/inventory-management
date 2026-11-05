@@ -1,7 +1,8 @@
+from datetime import datetime, timedelta
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from mock_data import inventory_items, orders, demand_forecasts, backlog_items, spending_summary, monthly_spending, category_spending, recent_transactions, purchase_orders
 
 app = FastAPI(title="Factory Inventory Management System")
@@ -89,6 +90,10 @@ class DemandForecast(BaseModel):
     forecasted_demand: int
     trend: str
     period: str
+    # Restocking inputs. Optional so older records without them still validate;
+    # without these fields here, FastAPI would strip them from /api/demand.
+    unit_cost: Optional[float] = None
+    lead_time_days: Optional[int] = None
 
 class BacklogItem(BaseModel):
     id: str
@@ -119,6 +124,35 @@ class CreatePurchaseOrderRequest(BaseModel):
     unit_cost: float
     expected_delivery_date: str
     notes: Optional[str] = None
+
+class RestockLineRequest(BaseModel):
+    sku: str
+    quantity: int = Field(gt=0)
+
+class CreateRestockOrderRequest(BaseModel):
+    # min_length=1 makes an empty order a 422 without extra code
+    lines: List[RestockLineRequest] = Field(min_length=1)
+
+class RestockOrderLine(BaseModel):
+    sku: str
+    name: str
+    quantity: int
+    unit_cost: float
+    line_total: float
+    lead_time_days: int
+
+class RestockOrder(BaseModel):
+    id: str
+    order_number: str
+    status: str
+    submitted_date: str
+    expected_delivery: str
+    lead_time_days: int
+    total_value: float
+    lines: List[RestockOrderLine]
+
+# Submitted restocking orders. In memory only: they reset when the server restarts.
+restock_orders: List[dict] = []
 
 # API endpoints
 @app.get("/")
@@ -165,6 +199,49 @@ def get_order(order_id: str):
 def get_demand_forecasts():
     """Get demand forecasts"""
     return demand_forecasts
+
+@app.post("/api/restocking-orders", response_model=RestockOrder, status_code=201)
+def create_restocking_order(request: CreateRestockOrderRequest):
+    """Submit a restocking order. Prices and lead times come from the demand data, never from the client."""
+    forecasts_by_sku = {f["item_sku"]: f for f in demand_forecasts}
+
+    lines = []
+    for line in request.lines:
+        forecast = forecasts_by_sku.get(line.sku)
+        if not forecast:
+            raise HTTPException(status_code=404, detail=f"Unknown SKU: {line.sku}")
+        # An item without cost data cannot be priced, so it cannot be ordered
+        if forecast.get("unit_cost") is None or forecast.get("lead_time_days") is None:
+            raise HTTPException(status_code=422, detail=f"No cost data for SKU: {line.sku}")
+        lines.append({
+            "sku": line.sku,
+            "name": forecast["item_name"],
+            "quantity": line.quantity,
+            "unit_cost": forecast["unit_cost"],
+            "line_total": round(forecast["unit_cost"] * line.quantity, 2),
+            "lead_time_days": forecast["lead_time_days"],
+        })
+
+    # The whole order arrives when its slowest line arrives
+    lead_time_days = max(line["lead_time_days"] for line in lines)
+    now = datetime.now()
+    order = {
+        "id": str(len(restock_orders) + 1),
+        "order_number": f"RST-{now.year}-{len(restock_orders) + 1:04d}",
+        "status": "Submitted",
+        "submitted_date": now.isoformat(timespec="seconds"),
+        "expected_delivery": (now + timedelta(days=lead_time_days)).isoformat(timespec="seconds"),
+        "lead_time_days": lead_time_days,
+        "total_value": round(sum(line["line_total"] for line in lines), 2),
+        "lines": lines,
+    }
+    restock_orders.append(order)
+    return order
+
+@app.get("/api/restocking-orders", response_model=List[RestockOrder])
+def get_restocking_orders():
+    """Get submitted restocking orders, newest first"""
+    return list(reversed(restock_orders))
 
 @app.get("/api/backlog", response_model=List[BacklogItem])
 def get_backlog():

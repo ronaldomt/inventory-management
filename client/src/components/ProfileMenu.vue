@@ -1,7 +1,8 @@
 <template>
-  <div class="profile-menu">
+  <div class="profile-menu" :class="{ collapsed: isCollapsed }">
     <button
       class="profile-button"
+      :title="isCollapsed ? currentUser.name : null"
       @click="toggleDropdown"
       @blur="handleBlur"
     >
@@ -16,6 +17,7 @@
         height="16"
         viewBox="0 0 16 16"
         fill="none"
+        aria-hidden="true"
       >
         <path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
       </svg>
@@ -77,9 +79,11 @@
 import { ref, computed } from 'vue'
 import { useAuth } from '../composables/useAuth'
 import { useI18n } from '../composables/useI18n'
+import { useSidebar } from '../composables/useSidebar'
 
 const { currentUser, logout, getInitials } = useAuth()
 const { t } = useI18n()
+const { isCollapsed } = useSidebar()
 
 const isDropdownOpen = ref(false)
 const emit = defineEmits(['show-profile-details', 'show-tasks'])
@@ -124,10 +128,12 @@ const handleLogout = () => {
   display: flex;
   align-items: center;
   gap: 0.625rem;
-  padding: 0.5rem 0.875rem;
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  width: 100%;
+  height: 48px;
+  padding: 0 var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
   cursor: pointer;
   transition: all 0.2s ease;
   font-family: inherit;
@@ -152,29 +158,64 @@ const handleLogout = () => {
   letter-spacing: 0.025em;
 }
 
-.profile-name {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #0f172a;
+.avatar {
+  flex-shrink: 0;
 }
 
+.profile-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+/* The menu opens upward, so the closed chevron points up */
 .chevron {
   color: #64748b;
+  flex-shrink: 0;
+  transform: rotate(180deg);
   transition: transform 0.2s ease;
 }
 
 .chevron-open {
-  transform: rotate(180deg);
+  transform: rotate(0deg);
 }
 
+/* Collapsed: only the avatar circle stays. The name stays in the DOM for screen readers. */
+.collapsed .profile-button {
+  justify-content: center;
+  padding: 0;
+}
+
+.collapsed .profile-name {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.collapsed .chevron {
+  display: none;
+}
+
+/* The profile sits at the bottom of the sidebar, so the menu opens upward
+   (a downward menu would fall off the screen). It starts at the button's left
+   edge and grows to the right, over the page content, which also works when
+   the sidebar is only 72px wide. */
 .dropdown-menu {
   position: absolute;
-  top: calc(100% + 0.5rem);
-  right: 0;
+  bottom: calc(100% + 0.5rem);
+  left: 0;
   min-width: 280px;
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
   z-index: 1000;
   overflow: hidden;

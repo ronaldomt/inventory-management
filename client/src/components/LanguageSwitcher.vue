@@ -1,7 +1,8 @@
 <template>
-  <div class="language-switcher">
+  <div class="language-switcher" :class="{ collapsed: isCollapsed }">
     <button
       class="language-button"
+      :title="isCollapsed ? localeName : null"
       @click="toggleDropdown"
       @blur="handleBlur"
     >
@@ -11,6 +12,7 @@
         viewBox="0 0 20 20"
         fill="none"
         class="globe-icon"
+        aria-hidden="true"
       >
         <circle cx="10" cy="10" r="7.5" stroke="currentColor" stroke-width="1.5"/>
         <path d="M3 10H17" stroke="currentColor" stroke-width="1.5"/>
@@ -25,6 +27,7 @@
         height="16"
         viewBox="0 0 16 16"
         fill="none"
+        aria-hidden="true"
       >
         <path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
       </svg>
@@ -57,8 +60,10 @@
 <script setup>
 import { ref } from 'vue'
 import { useI18n } from '../composables/useI18n'
+import { useSidebar } from '../composables/useSidebar'
 
 const { currentLocale, setLocale, availableLocales, localeName } = useI18n()
+const { isCollapsed } = useSidebar()
 
 const isDropdownOpen = ref(false)
 
@@ -97,10 +102,12 @@ const selectLanguage = (locale) => {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 0.875rem;
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  width: 100%;
+  height: 40px;
+  padding: 0 var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
   cursor: pointer;
   transition: all 0.2s ease;
   font-family: inherit;
@@ -119,27 +126,54 @@ const selectLanguage = (locale) => {
 }
 
 .language-label {
+  flex: 1;
+  text-align: left;
   font-weight: 500;
 }
 
+/* The menu opens upward, so the closed chevron points up */
 .chevron {
   color: #64748b;
+  transform: rotate(180deg);
   transition: transform 0.2s ease;
   flex-shrink: 0;
 }
 
 .chevron-open {
-  transform: rotate(180deg);
+  transform: rotate(0deg);
 }
 
+/* Collapsed: only the globe stays. The label stays in the DOM for screen readers. */
+.collapsed .language-button {
+  justify-content: center;
+  padding: 0;
+}
+
+.collapsed .language-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.collapsed .chevron {
+  display: none;
+}
+
+/* The switcher sits at the bottom of the sidebar, so the menu opens upward
+   (a downward menu would fall off the screen). It starts at the button's left
+   edge and grows to the right, over the page content, which also works when
+   the sidebar is only 72px wide. */
 .dropdown-menu {
   position: absolute;
-  top: calc(100% + 0.5rem);
-  right: 0;
+  bottom: calc(100% + 0.5rem);
+  left: 0;
   min-width: 160px;
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
   z-index: 1000;
   overflow: hidden;

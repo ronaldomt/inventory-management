@@ -6,8 +6,11 @@ export default {
     orders: '注文',
     finance: '財務',
     demandForecast: '需要予測',
+    restocking: '補充発注',
     companyName: '触媒コンポーネンツ',
-    subtitle: '在庫管理システム'
+    subtitle: '在庫管理システム',
+    collapseSidebar: 'サイドバーを閉じる',
+    expandSidebar: 'サイドバーを開く'
   },
 
   // Dashboard
@@ -126,6 +129,45 @@ export default {
       status: 'ステータス',
       expectedDelivery: '予定配達日',
       actualDelivery: '実際の配達日'
+    },
+    submitted: {
+      title: '発注済みの注文',
+      empty: '発注済みの補充注文はまだありません。',
+      loadFailed: '発注済みの注文を読み込めませんでした',
+      leadTime: 'リードタイム',
+      days: '{count}日'
+    }
+  },
+
+  // Restocking
+  restocking: {
+    title: '補充発注',
+    description: '予算の範囲内で、予測需要に基づく補充注文を作成します',
+    budget: '予算',
+    budgetLabel: '補充予算',
+    recommendedTotal: '推奨合計額',
+    remainingBudget: '残り予算',
+    itemsToOrder: '発注品目数',
+    recommendedItems: '推奨品目',
+    rule: '需要が増加中または安定している品目を予測の伸び率順に並べ、全額が残り予算に収まる場合のみ追加します。',
+    empty: 'この予算で発注できる品目はありません。予算を増やすと推奨品目が表示されます。',
+    noEligible: '補充の対象となる、需要が増加中または安定している品目がありません。',
+    placeOrder: '発注する',
+    placing: '発注中...',
+    orderSuccess: '注文 {orderNumber} を受け付けました。リードタイム: {days}日',
+    orderPlaced: '発注済み',
+    viewOrders: '注文一覧で見る',
+    orderFailed: '発注に失敗しました。もう一度お試しください。',
+    loadFailed: '需要データを読み込めませんでした',
+    days: '{count}日',
+    table: {
+      sku: 'SKU',
+      itemName: '品名',
+      quantity: '数量',
+      unitCost: '単価',
+      lineTotal: '小計',
+      leadTime: 'リードタイム',
+      growth: '伸び率'
     }
   },
 
@@ -204,6 +246,7 @@ export default {
     shipped: '出荷済み',
     processing: '処理中',
     backordered: 'バックオーダー',
+    submitted: '発注済み',
     inStock: '在庫あり',
     lowStock: '在庫僅少',
     adequate: '適量'

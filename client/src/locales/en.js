@@ -6,8 +6,11 @@ export default {
     orders: 'Orders',
     finance: 'Finance',
     demandForecast: 'Demand Forecast',
+    restocking: 'Restocking',
     companyName: 'Catalyst Components',
-    subtitle: 'Inventory Management System'
+    subtitle: 'Inventory Management System',
+    collapseSidebar: 'Collapse sidebar',
+    expandSidebar: 'Expand sidebar'
   },
 
   // Dashboard
@@ -126,6 +129,45 @@ export default {
       status: 'Status',
       expectedDelivery: 'Expected Delivery',
       actualDelivery: 'Actual Delivery'
+    },
+    submitted: {
+      title: 'Submitted Orders',
+      empty: 'No restocking orders have been submitted yet.',
+      loadFailed: 'Failed to load submitted orders',
+      leadTime: 'Lead Time',
+      days: '{count} days'
+    }
+  },
+
+  // Restocking
+  restocking: {
+    title: 'Restocking',
+    description: 'Build a restocking order from forecasted demand within a budget',
+    budget: 'Budget',
+    budgetLabel: 'Restocking budget',
+    recommendedTotal: 'Recommended Total',
+    remainingBudget: 'Remaining Budget',
+    itemsToOrder: 'Items to Order',
+    recommendedItems: 'Recommended Items',
+    rule: 'Items with increasing or stable demand are ranked by forecast growth. An item is added only if its full cost fits in the remaining budget.',
+    empty: 'No items fit within this budget. Increase the budget to see recommendations.',
+    noEligible: 'No items with increasing or stable demand are available for restocking.',
+    placeOrder: 'Place Order',
+    placing: 'Placing order...',
+    orderSuccess: 'Order {orderNumber} submitted. Lead time: {days} days.',
+    orderPlaced: 'Order placed',
+    viewOrders: 'View in Orders',
+    orderFailed: 'Failed to place the order. Please try again.',
+    loadFailed: 'Failed to load demand data',
+    days: '{count} days',
+    table: {
+      sku: 'SKU',
+      itemName: 'Item Name',
+      quantity: 'Quantity',
+      unitCost: 'Unit Cost',
+      lineTotal: 'Line Total',
+      leadTime: 'Lead Time',
+      growth: 'Growth'
     }
   },
 
@@ -204,6 +246,7 @@ export default {
     shipped: 'Shipped',
     processing: 'Processing',
     backordered: 'Backordered',
+    submitted: 'Submitted',
     inStock: 'In Stock',
     lowStock: 'Low Stock',
     adequate: 'Adequate'
